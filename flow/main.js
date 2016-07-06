@@ -112,16 +112,10 @@
 			});
 		}.bind(this);
 		this.onDragStart = function(event) {
-			this.startPosition = {
-				mouse: {
-					global: {
-						x: event.data.global.x,
-						y: event.data.global.y
-					},
-					relative: {
-						x: event.data.global.x - this.element.position.x,
-						y: event.data.global.y - this.element.position.y
-					}
+			this.start = {
+				mouseGlobal: {
+					x: event.data.global.x,
+					y: event.data.global.y
 				},
 				element: {
 					x: this.element.position.x,
@@ -130,35 +124,65 @@
 			};
 			this.data = event.data;
 			this.dragging = true;
+			clearInterval(this.decayInterval);
 		}.bind(this);
 		this.onDragEnd = function(event) {
 			this.data = null;
 			this.dragging = false;
+			this.decay(this.velocity);
 		}.bind(this);
 		this.onDragMove = function(event) {
 			if (this.dragging) {
-				var currentPosition = {
-					mouse: {
-						x: event.data.global.x,
-						y: event.data.global.y
-					}
-				},
-				movement = {
-					x: currentPosition.mouse.x - this.startPosition.mouse.global.x,
-					y: currentPosition.mouse.y - this.startPosition.mouse.global.y
-				},
-				position = {
-					x: this.startPosition.element.x + movement.x,
-					y: this.startPosition.element.y + movement.y
+				var current = {
+						mouseGlobal: {
+							x: event.data.global.x,
+							y: event.data.global.y
+						}
+					},
+					movement = {
+						x: current.mouseGlobal.x - this.start.mouseGlobal.x,
+						y: current.mouseGlobal.y - this.start.mouseGlobal.y
+					};
+
+				if (this.options.scrollX == false)
+					movement.x = 0;
+				if (this.options.scrollY == false)
+					movement.y = 0;
+
+				this.previousPosition = this.element.position;
+				this.element.position = {
+					x: this.start.element.x + movement.x,
+					y: this.start.element.y + movement.y
 				};
-				if (!this.options.scrollX)
-					position.x = 0;
-				if (!this.options.scrollY)
-					position.y = 0;
-				this.element.position.x = position.x;
-				this.element.position.y = position.y;
-				this.options.movementCallback(position);
+				this.velocity = {
+					x: this.element.position.x - this.previousPosition.x,
+					y: this.element.position.y - this.previousPosition.y
+				};
+				this.options.movementCallback(this.element.position);
 		    }
+		}.bind(this);
+		this.decay = function(velocity) {
+			var factor = 2,
+				interval = 10,
+				threshold = 0.1,
+				decayFactor = 0.9,
+				falloff = function(v) {
+					return decayFactor * v;
+				};
+			this.decayInterval = setInterval(function() {
+				this.element.position.x += (velocity.x / factor);
+				this.element.position.y += (velocity.y / factor);
+				this.options.movementCallback(this.element.position);
+				if (velocity.x > threshold || velocity.x < -threshold) {
+					velocity.x = falloff(velocity.x);
+				}
+				if (velocity.y > threshold || velocity.y < -threshold) {
+					velocity.y = falloff(velocity.y);
+				}
+				if (velocity.x <= threshold && velocity.x >= -threshold) {
+					clearInterval(this.decayInterval); 
+				}
+			}.bind(this), interval);
 		}.bind(this);
 	};
 
