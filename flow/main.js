@@ -50,6 +50,7 @@
 		    renderer.render(stage);
 		}());
 		window.flowContainer = flowContainer;
+		setFigureStyles(0);
 	};
 
 	var setFigureStyles = function(xPosition) {
