@@ -9,35 +9,11 @@
 	var getDimensions = function() {
 		return  {
 			height: window.document.body.offsetHeight,
-			width: window.document.body.offsetWidth
+			width: window.document.body.offsetWidth,
+			center: 0.5 * window.document.body.offsetWidth
 		};
 	};
-	var getBounds = function() {
-		var bodyWidth = window.document.body.offsetWidth;
-		return {
-			leftEdge: 0,
-			rightEdge: bodyWidth,
-			center: 0.5 * bodyWidth
-		};
-	};
-	var setFigureStyles = function(position) {
-		var leftEdge = 0,
-			rightEdge = window.document.body.offsetWidth,
-			center = 0.5 * rightEdge,
-			i, globalFigurePosition, positionFactor; // positionFactor of 0 = at edge, 1 = center
-
-		for (i = 0; i < figures.length; i++) {
-			globalFigurePosition = (i * figureOuterWidth) + (0.5 * figureOuterWidth) + position.x;
-			positionFactor = 1 - ((globalFigurePosition - center) * (globalFigurePosition - center)) / (center * center);
-			if (positionFactor > 1)
-				positionFactor = 1;
-			if (positionFactor < 0)
-				positionFactor = 0;
-			figures[i].alpha = positionFactor;
-			figures[i].height = figureHeight * positionFactor;
-			figures[i].width = figureWidth * positionFactor;
-		}
-	};
+	var setFigure;
 
 	window.onload = function() {
 		var dimensions = getDimensions(),
@@ -77,8 +53,18 @@
 		}());
 
 		draggable = new Draggable(flowContainer, {
-			movementCallback: setFigureStyles,
-			scrollY: false
+			scrollY: false,
+			movementCallbacks: [
+				function(figure, position) {
+					figure.alpha = position;
+				},
+				function(figure, position) {
+					figure.height = figureHeight * position;
+				},
+				function(figure, position) {
+					figure.width = figureWidth * position;
+				}
+			]
 		});
 		draggable.init();
 	};
@@ -88,7 +74,7 @@
 		this.options = {
 			scrollX: true,
 			scrollY: true,
-			movementCallback: function(position) {}
+			movementCallbacks: []
 		};
 
 		var key;
@@ -106,10 +92,27 @@
 		        .on('touchendoutside', this.onDragEnd)
 		        .on('mousemove', this.onDragMove)
 		        .on('touchmove', this.onDragMove);
-			this.options.movementCallback({
+			this.movementCallback({
 				x: 0,
 				y: 0
 			});
+		}.bind(this);
+		this.movementCallback = function(position) {
+			var center = getDimensions().center,
+				i, j, globalFigurePosition, positionFactor; // positionFactor of 0 = at edge, 1 = center
+
+			for (i = 0; i < figures.length; i++) {
+				globalFigurePosition = (i * figureOuterWidth) + (0.5 * figureOuterWidth) + position.x;
+				positionFactor = 1 - ((globalFigurePosition - center) * (globalFigurePosition - center)) / (center * center);
+				if (positionFactor > 1)
+					positionFactor = 1;
+				if (positionFactor < 0)
+					positionFactor = 0;
+
+				for (j = 0; j < this.options.movementCallbacks.length; j++) {
+					this.options.movementCallbacks[j].call(this, figures[i], positionFactor);
+				}
+			}
 		}.bind(this);
 		this.onDragStart = function(event) {
 			this.start = {
@@ -158,7 +161,7 @@
 					x: this.element.position.x - this.previousPosition.x,
 					y: this.element.position.y - this.previousPosition.y
 				};
-				this.options.movementCallback(this.element.position);
+				this.movementCallback(this.element.position);
 		    }
 		}.bind(this);
 		this.decay = function(velocity) {
@@ -172,7 +175,7 @@
 			this.decayInterval = setInterval(function() {
 				this.element.position.x += (velocity.x / factor);
 				this.element.position.y += (velocity.y / factor);
-				this.options.movementCallback(this.element.position);
+				this.movementCallback(this.element.position);
 				if (velocity.x > threshold || velocity.x < -threshold) {
 					velocity.x = falloff(velocity.x);
 				}
