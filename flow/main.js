@@ -76,24 +76,12 @@
 			scrollY: false,
 			movementCallbacks: [
 				function(figure, position) {
-					position += .1;
-					if (position > 1)
-						position = 1;
-					position *= position;
 					figure.alpha = position;
 				},
 				function(figure, position) {
-					position += .1;
-					if (position > 1)
-						position = 1;
-					position *= position;
 					figure.height = figureHeight * position;
 				},
 				function(figure, position) {
-					position += .1;
-					if (position > 1)
-						position = 1;
-					position *= position;
 					figure.width = figureWidth * position;
 				}
 			]
