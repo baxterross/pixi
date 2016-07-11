@@ -6,6 +6,15 @@
 		figureWidth,
 		figureOuterWidth;
 
+	var tween = function(object, property, stop, increment) {
+		increment |= 1;
+		object[property] += increment;
+		if (object[property] >= stop) {
+			object[property] = stop;
+		} else {
+			tween.call(this, property, stop, increment);
+		}
+	};
 	var getDimensions = function() {
 		return  {
 			height: window.document.body.offsetHeight,
@@ -24,7 +33,16 @@
 			stage = new PIXI.Container(),
 			flowContainer = new PIXI.Container(),
 			i, texture, man,
-			height, width;
+			height, width,
+			hover = false,
+			mouseover = function() {
+				hover = true;
+				this.tint = 0xff5500;
+			},
+			mouseout = function() {
+				hover = false;
+				this.tint = 0xffffff;
+			};
 
 		figureHeight = dimensions.height - gutterWidth,
 		figureWidth = figureHeight * 0.31,
@@ -40,9 +58,11 @@
 			man.anchor.set(0.5);
 			man.position.x = (figureWidth * 0.5) + (figureOuterWidth * i) + gutterWidth;
 			man.position.y = (figureHeight * 0.5) + (gutterWidth * 0.5);
+			man.interactive = true;
+			man.mouseover = mouseover.bind(man);
+			man.mouseout = mouseout.bind(man);
 			flowContainer.addChild(man);
 			figures.push(man);
-			figureInitialScale = man.scale.x;
 		}
 
 		document.body.appendChild(renderer.view);
@@ -56,12 +76,24 @@
 			scrollY: false,
 			movementCallbacks: [
 				function(figure, position) {
+					position += .1;
+					if (position > 1)
+						position = 1;
+					position *= position;
 					figure.alpha = position;
 				},
 				function(figure, position) {
+					position += .1;
+					if (position > 1)
+						position = 1;
+					position *= position;
 					figure.height = figureHeight * position;
 				},
 				function(figure, position) {
+					position += .1;
+					if (position > 1)
+						position = 1;
+					position *= position;
 					figure.width = figureWidth * position;
 				}
 			]
@@ -173,6 +205,9 @@
 					return decayFactor * v;
 				},
 				decayFunction = function() {
+					if (velocity === undefined)
+						return;
+
 					this.element.position.x += (velocity.x / factor);
 					this.element.position.y += (velocity.y / factor);
 					this.movementCallback(this.element.position);
