@@ -119,11 +119,15 @@
 		}.bind(this);
 		this.movementCallback = function(position) {
 			var center = getDimensions().center,
-				i, j, globalFigurePosition, positionFactor; // positionFactor of 0 = at edge, 1 = center
+				i, j,
+				globalFigurePosition,
+				relatievFigurePosition,
+				positionFactor; // positionFactor of 0 = at edge, 1 = center
 
 			for (i = 0; i < figures.length; i++) {
 				globalFigurePosition = (i * figureOuterWidth) + (0.5 * figureOuterWidth) + position.x;
-				positionFactor = 1 - ((globalFigurePosition - center) * (globalFigurePosition - center)) / (center * center);
+				relativeFigurePosition = Math.abs(globalFigurePosition - center);
+				positionFactor = 1 - (relativeFigurePosition / center);
 				if (positionFactor > 1)
 					positionFactor = 1;
 				if (positionFactor < 0)
