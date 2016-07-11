@@ -22,6 +22,12 @@
 			center: 0.5 * window.document.body.offsetWidth
 		};
 	};
+	// this function changes the position into a value used for the display purposes
+	var positionDisplay = function(position) {
+		position = Math.pow(position, 2); // increasing the exponent results in a wider plateau
+		position = 1 - position;
+		return position;
+	};
 	var setFigure;
 
 	window.onload = function() {
@@ -72,17 +78,19 @@
 		    renderer.render(stage);
 		}());
 
+
+
 		draggable = new Draggable(flowContainer, {
 			scrollY: false,
 			movementCallbacks: [
 				function(figure, position) {
-					figure.alpha = position;
+					figure.alpha = positionDisplay(position)
 				},
 				function(figure, position) {
-					figure.height = figureHeight * position;
+					figure.height = figureHeight * positionDisplay(position);
 				},
 				function(figure, position) {
-					figure.width = figureWidth * position;
+					figure.width = figureWidth * positionDisplay(position);
 				}
 			]
 		});
@@ -122,12 +130,12 @@
 				i, j,
 				globalFigurePosition,
 				relatievFigurePosition,
-				positionFactor; // positionFactor of 0 = at edge, 1 = center
+				positionFactor; // positionFactor of 1 = at edge, 0 = center
 
 			for (i = 0; i < figures.length; i++) {
 				globalFigurePosition = (i * figureOuterWidth) + (0.5 * figureOuterWidth) + position.x;
 				relativeFigurePosition = Math.abs(globalFigurePosition - center);
-				positionFactor = 1 - (relativeFigurePosition / center);
+				positionFactor = (relativeFigurePosition / center);
 				if (positionFactor > 1)
 					positionFactor = 1;
 				if (positionFactor < 0)
