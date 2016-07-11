@@ -171,21 +171,22 @@
 				decayFactor = 0.9,
 				falloff = function(v) {
 					return decayFactor * v;
-				};
-			this.decayInterval = setInterval(function() {
-				this.element.position.x += (velocity.x / factor);
-				this.element.position.y += (velocity.y / factor);
-				this.movementCallback(this.element.position);
-				if (velocity.x > threshold || velocity.x < -threshold) {
-					velocity.x = falloff(velocity.x);
-				}
-				if (velocity.y > threshold || velocity.y < -threshold) {
-					velocity.y = falloff(velocity.y);
-				}
-				if (velocity.x <= threshold && velocity.x >= -threshold) {
-					clearInterval(this.decayInterval); 
-				}
-			}.bind(this), interval);
+				},
+				decayFunction = function() {
+					this.element.position.x += (velocity.x / factor);
+					this.element.position.y += (velocity.y / factor);
+					this.movementCallback(this.element.position);
+					if (velocity.x > threshold || velocity.x < -threshold) {
+						velocity.x = falloff(velocity.x);
+					}
+					if (velocity.y > threshold || velocity.y < -threshold) {
+						velocity.y = falloff(velocity.y);
+					}
+					if (velocity.x <= threshold && velocity.x >= -threshold) {
+						clearInterval(this.decayInterval); 
+					}
+				}.bind(this);
+			this.decayInterval = setInterval(decayFunction, interval);
 		}.bind(this);
 	};
 
