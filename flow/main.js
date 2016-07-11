@@ -95,15 +95,23 @@
 		});
 		draggable.init();
 
-		var mouseX = null,
-			mouseY = null;
+		var mousePosition;
 		window.document.body.onmousemove = function(event) {
-			var mouseV = {
-				x: event.x - mouseX,
-				y: event.y - mouseY
+			var mouseVelocity,
+				factor = 30;
+
+			if (mousePosition) {
+				mouseVelocity = {
+					x: event.x - mousePosition.x,
+					y: event.y - mousePosition.y
+				};
+				draggable.velocity.x -= (mouseVelocity.x / 60);
+			}
+
+			mousePosition = {
+				x: event.x,
+				y: event.y
 			};
-			mouseX = event.x;
-			mouseY = event.y;
 		};
 	};
 
@@ -113,6 +121,10 @@
 			scrollX: true,
 			scrollY: true,
 			movementCallbacks: []
+		};
+		this.velocity = {
+			x: 0,
+			y: 0
 		};
 
 		var key;
@@ -206,9 +218,6 @@
 		    }
 		}.bind(this);
 		this.decay = function() {
-			if (this.velocity === undefined)
-				return;
-
 			if (this.dragging)
 				return;
 
@@ -224,12 +233,8 @@
 			this.element.position.y += (velocity.y / factor);
 			this.movementCallback(this.element.position);
 
-			if (velocity.x > threshold || velocity.x < -threshold) {
-				velocity.x = falloff(velocity.x);
-			}
-			if (velocity.y > threshold || velocity.y < -threshold) {
-				velocity.y = falloff(velocity.y);
-			}
+			velocity.x = falloff(velocity.x);
+			velocity.y = falloff(velocity.y);
 		}.bind(this);
 	};
 
