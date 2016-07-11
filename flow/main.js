@@ -24,8 +24,11 @@
 	};
 	// this function changes the position into a value used for the display purposes
 	var positionDisplay = function(position) {
-		position = Math.pow(position, 2); // increasing the exponent results in a wider plateau
-		position = 1 - position;
+		position = Math.pow(position, 4); // increasing the exponent results in a wider plateau
+		position = 1 - position; // 1 in the middle, 0 at the edge
+		position += 0; // you can raise the value so it doesn't fall off as much at the edge
+		if (position > 1)
+			position = 1; // value can't exceed 1
 		return position;
 	};
 	var setFigure;
@@ -67,6 +70,8 @@
 			man.interactive = true;
 			man.mouseover = mouseover.bind(man);
 			man.mouseout = mouseout.bind(man);
+			man.blur = new PIXI.filters.blurFilter();
+			man.filters = [man.blur];
 			flowContainer.addChild(man);
 			figures.push(man);
 		}
@@ -88,6 +93,7 @@
 				},
 				function(figure, position) {
 					figure.height = figureHeight * positionDisplay(position);
+					figure.blur.blur = positionDisplay(position);
 				},
 				function(figure, position) {
 					figure.width = figureWidth * positionDisplay(position);
