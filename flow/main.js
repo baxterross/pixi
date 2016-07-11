@@ -70,7 +70,7 @@
 			man.interactive = true;
 			man.mouseover = mouseover.bind(man);
 			man.mouseout = mouseout.bind(man);
-			man.blur = new PIXI.filters.blurFilter();
+			man.blur = new PIXI.filters. BlurFilter();
 			man.filters = [man.blur];
 			flowContainer.addChild(man);
 			figures.push(man);
