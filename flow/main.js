@@ -70,8 +70,6 @@
 			man.interactive = true;
 			man.mouseover = mouseover.bind(man);
 			man.mouseout = mouseout.bind(man);
-			man.blur = new PIXI.filters. BlurFilter();
-			man.filters = [man.blur];
 			flowContainer.addChild(man);
 			figures.push(man);
 		}
@@ -83,9 +81,7 @@
 		    renderer.render(stage);
 		}());
 
-
-
-		draggable = new Draggable(flowContainer, {
+		window.draggable = draggable = new Draggable(flowContainer, {
 			scrollY: false,
 			movementCallbacks: [
 				function(figure, position) {
@@ -93,14 +89,22 @@
 				},
 				function(figure, position) {
 					figure.height = figureHeight * positionDisplay(position);
-					figure.blur.blur = positionDisplay(position);
-				},
-				function(figure, position) {
 					figure.width = figureWidth * positionDisplay(position);
 				}
 			]
 		});
 		draggable.init();
+
+		var mouseX = null,
+			mouseY = null;
+		window.document.body.onmousemove = function(event) {
+			var mouseV = {
+				x: event.x - mouseX,
+				y: event.y - mouseY
+			};
+			mouseX = event.x;
+			mouseY = event.y;
+		};
 	};
 
 	var Draggable = function(element, options) {
@@ -130,6 +134,7 @@
 				x: 0,
 				y: 0
 			});
+			this.decayInterval = window.setInterval(this.decay, 10);
 		}.bind(this);
 		this.movementCallback = function(position) {
 			var center = getDimensions().center,
@@ -165,12 +170,10 @@
 			};
 			this.data = event.data;
 			this.dragging = true;
-			clearInterval(this.decayInterval);
 		}.bind(this);
 		this.onDragEnd = function(event) {
 			this.data = null;
 			this.dragging = false;
-			this.decay(this.velocity);
 		}.bind(this);
 		this.onDragMove = function(event) {
 			if (this.dragging) {
@@ -202,32 +205,31 @@
 				this.movementCallback(this.element.position);
 		    }
 		}.bind(this);
-		this.decay = function(velocity) {
+		this.decay = function() {
+			if (this.velocity === undefined)
+				return;
+
+			if (this.dragging)
+				return;
+
 			var factor = 2,
-				interval = 10,
 				threshold = 0.1,
 				decayFactor = 0.9,
+				velocity = this.velocity,
 				falloff = function(v) {
 					return decayFactor * v;
-				},
-				decayFunction = function() {
-					if (velocity === undefined)
-						return;
+				};
 
-					this.element.position.x += (velocity.x / factor);
-					this.element.position.y += (velocity.y / factor);
-					this.movementCallback(this.element.position);
-					if (velocity.x > threshold || velocity.x < -threshold) {
-						velocity.x = falloff(velocity.x);
-					}
-					if (velocity.y > threshold || velocity.y < -threshold) {
-						velocity.y = falloff(velocity.y);
-					}
-					if (velocity.x <= threshold && velocity.x >= -threshold) {
-						clearInterval(this.decayInterval); 
-					}
-				}.bind(this);
-			this.decayInterval = setInterval(decayFunction, interval);
+			this.element.position.x += (velocity.x / factor);
+			this.element.position.y += (velocity.y / factor);
+			this.movementCallback(this.element.position);
+
+			if (velocity.x > threshold || velocity.x < -threshold) {
+				velocity.x = falloff(velocity.x);
+			}
+			if (velocity.y > threshold || velocity.y < -threshold) {
+				velocity.y = falloff(velocity.y);
+			}
 		}.bind(this);
 	};
 
